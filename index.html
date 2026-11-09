@@ -1,0 +1,406 @@
+<!doctype html>
+<!--
+Diseño "Escalera", revisado el 9 de noviembre de 2026.
+La primera pantalla solo lleva el argumento: la escalera de precios, el bucle semanal y la decisión.
+El detalle del acuerdo va en secciones desplegables; al imprimir o guardar en PDF se abren todas.
+Escalera: el setup es la plataforma; cada peldaño muestra lo que suma y el total acumulado por empresa.
+La adquisición queda aparte, con borde discontinuo, porque es una comisión de éxito y no un pago por lead.
+Bucle: anillo de cuatro pasos con la revisión semanal de 30 minutos en el centro.
+Rampa de un solo tono (azul tinta) que oscurece a medida que el resultado vale más. Solo fuentes de sistema.
+Animación: los peldaños se construyen uno a uno y los totales cuentan hacia arriba; un pulso lento recorre el bucle.
+Sin animación con movimiento reducido y en impresión: se ve el estado final.
+Decisión del 9 de noviembre: escalera de la variante "Escalera" y bucle en anillo de la variante "Proporcional".
+Descartado: columnas a escala real (el peldaño de 5 € quedaba ilegible); barras horizontales desde un muro de setup
+(el setup dejaba de leerse como suelo); bucle en línea con tendencia sin cifras (promesa sin datos).
+Valores de animación: duración 600ms, escalón 260ms, pulso 8s, cubic-bezier(.23,1,.32,1).
+-->
+<html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cabrera Heredia: propuesta de búsqueda</title>
+<meta name="description" content="Un sistema de originación trazable, pagado por resultados.">
+<meta property="og:title" content="Propuesta de búsqueda para Cabrera Heredia">
+<meta property="og:description" content="Un sistema de originación trazable, pagado por resultados.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://hugodulce.github.io/propuesta-ch/">
+<meta property="og:image" content="https://hugodulce.github.io/propuesta-ch/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="robots" content="noindex, nofollow">
+<style>
+  @page { size: A4; margin: 1.4cm 1.6cm; }
+  :root {
+    --ink:#15212e; --mut:#68717c; --hair:#dde1e6;
+    --s1:#e4ebf3; --s2:#c3d3e5; --s3:#8faacb; --s4:#4f739e; --s5:#1f3f66;
+    --dur:600ms; --stagger:260ms; --pulse:8s; --ease:cubic-bezier(.23,1,.32,1);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#fff; color:var(--ink); font-family:'Avenir Next','Helvetica Neue',Arial,sans-serif; font-size:12.4px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .sheet { max-width:794px; margin:0 auto; padding:56px 60px 60px; }
+  .num { font-variant-numeric:tabular-nums; }
+  a { color:inherit; text-decoration:none; }
+
+  h1 { font-size:30px; font-weight:600; letter-spacing:-.02em; line-height:1.1; }
+  .sub { font-size:15px; color:var(--mut); margin:8px 0 4px; }
+  .meta { font-size:11px; color:var(--mut); margin-bottom:26px; }
+  .scr { font-size:13.2px; margin-bottom:22px; max-width:600px; }
+  .scr p { margin-bottom:6px; }
+
+  /* Escalera */
+  .stairs { display:grid; grid-template-columns:1fr 132px; gap:0 30px; margin:4px 0 6px; }
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); align-items:end; height:236px; }
+  .step { display:flex; flex-direction:column; justify-content:flex-end; }
+  .step .lab { padding:0 10px 6px; }
+  .step .n { font-size:11.5px; font-weight:600; display:block; }
+  .step .t { font-size:20px; font-weight:600; line-height:1.1; }
+  .step .t small { font-size:11px; font-weight:400; color:var(--mut); margin-left:3px; }
+  .block { display:flex; flex-direction:column; }
+  .add { display:flex; align-items:flex-start; padding:6px 10px; font-size:10.5px; font-weight:600; border-top:2px solid var(--ink); }
+  .carry { background:repeating-linear-gradient(135deg, var(--s1) 0 6px, #fff 6px 9px); border-top:1px dashed var(--s3); }
+  .st1 .add { background:var(--s2); }
+  .st2 .add { background:var(--s3); }
+  .st3 .add { background:var(--s4); color:#fff; }
+  .plinth { display:block; background:var(--s5); color:#fff; padding:10px 12px; margin:0 -8px; border-radius:3px; font-size:11px; }
+  .plinth b { font-size:13px; margin-right:6px; }
+  .adq { display:flex; flex-direction:column; justify-content:flex-end; }
+  .adq .box { height:200px; border:1.5px dashed var(--s5); border-radius:3px 3px 0 0; padding:9px; display:flex; flex-direction:column; justify-content:flex-end; font-size:10.5px; color:var(--mut); line-height:1.35; }
+  .adq .box b { color:var(--ink); font-size:20px; line-height:1.1; }
+  .adq .box .n { color:var(--ink); font-size:11.5px; font-weight:600; }
+  /* Summit: a flag marks the end of the climb; a dotted line ties Reunión's top to it. */
+  .adq .box { position:relative; }
+  .adq .box::before { content:""; position:absolute; left:-31px; top:24px; width:30px; border-top:1.5px dotted var(--s4); }
+  .adq .flag { display:block; width:16px; height:18px; margin-bottom:auto; color:var(--s5); }
+  .adq .box .eye { font-size:9.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--s4); }
+  .adq .base { height:40px; font-size:10.5px; color:var(--mut); padding-top:8px; }
+  /* Each part of the stairs links to its detail. The cue is a hover tint, so the drawing stays clean. */
+  .jump { display:block; border-radius:3px; transition:background-color 150ms ease-out; }
+  @media (hover:hover) { .jump:hover .lab { background:var(--s1); } .plinth.jump:hover { background:#173252; } .adq .jump:hover .box { background:var(--s1); } }
+  .jump:focus-visible { outline:2px solid var(--s4); outline-offset:2px; }
+  .caption { font-size:11px; color:var(--mut); border-top:2px solid var(--ink); padding-top:6px; margin-bottom:28px; }
+
+  section, .d > summary, .d > .body { display:grid; grid-template-columns:160px 1fr; gap:22px; }
+  section { padding:16px 0; border-top:1px solid var(--hair); }
+  h2 { font-size:13px; font-weight:600; line-height:1.35; }
+  h2 span { display:block; font-weight:400; color:var(--mut); font-size:11.5px; margin-top:3px; }
+  p { margin-bottom:7px; }
+  ul { margin:0 0 4px 16px; }
+  li { margin-bottom:4px; }
+
+  /* Bucle */
+  .loop { display:grid; grid-template-columns:250px 1fr; gap:18px; align-items:center; }
+  .loop svg { width:250px; height:auto; display:block; }
+  .loop dl { display:grid; gap:7px; }
+  .loop dt { font-weight:600; font-size:12px; }
+  .loop dd { color:var(--mut); font-size:11.6px; }
+  .arc { fill:none; stroke:var(--s3); stroke-width:2; }
+  .pulse { fill:none; stroke:var(--s5); stroke-width:4; stroke-linecap:round; stroke-dasharray:44 522; opacity:0; }
+  .msg { margin-top:12px; }
+
+  .decision { margin-top:18px; background:var(--s5); color:#fff; padding:18px 22px; border-radius:6px; font-size:13.2px; }
+  .decision .t { font-weight:600; font-size:15px; margin-bottom:4px; }
+
+  /* Detalle desplegable */
+  .dhead { display:flex; justify-content:space-between; align-items:baseline; margin:34px 0 4px; padding-bottom:6px; border-bottom:2px solid var(--ink); }
+  .dhead h2 { font-size:15px; }
+  .dhead button { font:inherit; font-size:11.5px; color:var(--s4); background:none; border:0; padding:6px 0 6px 12px; cursor:pointer; }
+  .dhead button:focus-visible { outline:2px solid var(--s4); outline-offset:2px; border-radius:3px; }
+  .d { border-bottom:1px solid var(--hair); }
+  .d > summary { list-style:none; cursor:pointer; padding:13px 28px 13px 0; position:relative; border-radius:3px; transition:background-color 150ms ease-out; }
+  .d > summary::-webkit-details-marker { display:none; }
+  .d > summary:focus-visible { outline:2px solid var(--s4); outline-offset:2px; }
+  @media (hover:hover) { .d > summary:hover { background:#f4f7fa; } }
+  .d > summary .g { color:var(--ink); }
+  .d > summary::after { content:''; position:absolute; right:8px; top:19px; width:7px; height:7px; border-right:1.5px solid var(--s4); border-bottom:1.5px solid var(--s4);
+    transform:rotate(45deg); transition:transform 200ms var(--ease); }
+  .d[open] > summary::after { transform:translate(0,3px) rotate(-135deg); }
+  .d > .body { padding:0 0 16px; }
+  .d > .body > div { grid-column:2; }
+
+  .items { display:grid; grid-template-columns:1fr 1fr; column-gap:22px; row-gap:9px; }
+  .items > div > b { display:block; }
+  .items > div > span { color:var(--mut); font-size:11.6px; }
+  table { width:100%; border-collapse:collapse; font-size:11.6px; }
+  th { text-align:left; font-weight:600; color:var(--mut); padding:0 10px 5px 0; border-bottom:1px solid var(--ink); }
+  td { padding:7px 10px 7px 0; border-bottom:1px solid var(--hair); vertical-align:top; }
+  td.r, th.r { text-align:right; white-space:nowrap; }
+  .ej { color:var(--mut); }
+  .foot { margin-top:18px; font-size:11px; color:var(--mut); }
+
+  /* Motion. Runs only when JS sets .anim, which it skips under reduced motion. */
+  @keyframes rise { from { clip-path:inset(100% 0 0 0); } to { clip-path:inset(0 0 0 0); } }
+  @keyframes fade { from { opacity:0; } to { opacity:1; } }
+  @keyframes orbit { from { stroke-dashoffset:0; } to { stroke-dashoffset:-566; } }
+  .anim .ry { animation:rise var(--dur) var(--ease) both; animation-delay:calc(var(--i) * var(--stagger)); }
+  .anim .fd { animation:fade calc(var(--dur) * .6) ease-out both; animation-delay:calc(var(--i) * var(--stagger)); }
+  .anim .pulse { opacity:1; animation:orbit var(--pulse) linear infinite; animation-delay:calc(var(--dur) + var(--stagger) * 3); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .anim .ry, .anim .fd, .anim .pulse { animation:none; }
+    .pulse { display:none; }
+    .d > summary::after, .jump, .d > summary { transition:none; }
+  }
+
+  /* Phone: one column. The stairs keep their shape; the success fee drops below them. */
+  @media screen and (max-width:640px) {
+    body { font-size:13.5px; }
+    .sheet { padding:32px 18px 44px; }
+    h1 { font-size:26px; }
+    .scr { font-size:14px; }
+    .stairs { grid-template-columns:1fr; gap:14px; }
+    .steps { height:250px; }
+    .step .lab { padding:0 6px 6px; }
+    .step .t { font-size:18px; }
+    .step .t small { display:block; margin-left:0; }
+    .add { padding:6px; }
+    .plinth { margin:0; }
+    .adq .box { height:auto; border-radius:3px; padding:12px; }
+    .adq .box::before { display:none; }
+    .adq .flag { margin-bottom:8px; }
+    .adq .base { height:auto; }
+    section, .d > summary, .d > .body { grid-template-columns:1fr; gap:8px; }
+    .d > .body > div { grid-column:1; }
+    .d > summary { padding-right:30px; }
+    .loop { grid-template-columns:1fr; justify-items:center; }
+    .loop svg { width:min(260px,100%); }
+    .loop dl { justify-self:stretch; }
+    .items { grid-template-columns:1fr; }
+    table { font-size:12px; }
+    .decision { padding:16px 18px; }
+  }
+
+  @media print {
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; animation:none !important; transition:none !important; }
+    .sheet { max-width:100%; padding:0; }
+    .pulse, .dhead button, .d > summary::after { display:none !important; }
+    .d::details-content { content-visibility:visible; display:contents; }
+    .d > summary { padding-right:0; }
+    .stairs, section, table, tr, .decision, .d > summary { break-inside:avoid; page-break-inside:avoid; }
+    .d > summary { break-after:avoid; page-break-after:avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Propuesta de búsqueda</h1>
+  <div class="sub">Un sistema de originación trazable, pagado por resultados.</div>
+  <div class="meta">Para Rafael Cabrera y Diego Heredia. Madrid, 10 de noviembre de 2026.</div>
+
+  <div class="scr">
+    <p>Cabrera Heredia estructura su PPM y abre conversaciones con inversores antes de fin de año. El fundraising formal arranca en enero de 2027. Una lista de empresas no genera reuniones. El envío masivo sin curación quema cuentas y no deja aprendizaje.</p>
+    <p><b>Monto un sistema de originación trazable y lo opero cobrando por resultados. Cada respuesta, lead calificado y reunión queda registrada en un CRM que Cabrera Heredia conserva.</b></p>
+  </div>
+
+  <figure class="stairs" id="escalera" aria-label="Escalera de precios por empresa. Setup de 900 euros, pago único, como plataforma. Respuesta: 5 euros en total. Calificado: más 5, 10 euros en total. Reunión: más 40, 50 euros en total. Objetivo final, adquisición: 5.000 euros al cierre de una compra, aparte.">
+    <div>
+      <div class="steps">
+        <a class="step st1 jump ry" style="--i:1" href="#peldanos"><div class="lab"><span class="n">Respuesta</span><span class="t num"><span data-count="5">5</span> €<small>total</small></span></div>
+          <div class="block"><div class="add" style="height:64px">+5 €</div></div></a>
+        <a class="step st2 jump ry" style="--i:2" href="#peldanos"><div class="lab"><span class="n">Calificado</span><span class="t num"><span data-count="10" data-from="5">10</span> €<small>total</small></span></div>
+          <div class="block"><div class="add" style="height:40px">+5 €</div><div class="carry" style="height:64px"></div></div></a>
+        <a class="step st3 jump ry" style="--i:3" href="#peldanos"><div class="lab"><span class="n">Reunión</span><span class="t num"><span data-count="50" data-from="10">50</span> €<small>total</small></span></div>
+          <div class="block"><div class="add" style="height:72px">+40 €</div><div class="carry" style="height:104px"></div></div></a>
+      </div>
+      <a class="plinth jump fd" style="--i:0" href="#setup"><b class="num">Setup: 900 €</b>Pago único. La plataforma sobre la que se apoya cada peldaño.</a>
+    </div>
+    <div class="adq fd" style="--i:4">
+      <a class="jump" href="#exito"><div class="box"><svg class="flag" viewBox="0 0 16 18" aria-hidden="true"><path d="M2 17V1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M2.75 2h10.5l-2.5 3.5 2.5 3.5H2.75z" fill="currentColor"/></svg><span class="eye">Objetivo final</span><span class="n">Adquisición</span><b class="num">5.000 €</b>Al cierre de una compra.</div></a>
+      <div class="base">Comisión de éxito, aparte de los leads.</div>
+    </div>
+  </figure>
+  <div class="caption">Cada peldaño se cobra una sola vez por empresa y se suma al anterior: una empresa que llega a reunión suma <b>50 €</b> en total. El setup se paga una vez y sostiene todo lo demás. La adquisición es una comisión de éxito aparte.</div>
+
+  <section>
+    <h2>El sistema aprende<span>Una vuelta por semana, con 30 minutos de revisión</span></h2>
+    <div>
+      <div class="loop">
+        <svg viewBox="0 0 300 268" role="img" aria-label="Bucle semanal: enviar, medir, aprender, ajustar y volver a enviar, con la revisión semanal de 30 minutos en el centro">
+          <defs><marker id="ah" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#8faacb"/></marker></defs>
+          <path class="arc" marker-end="url(#ah)" d="M171.8 46.7 A90 90 0 0 1 237.3 112.2"/>
+          <path class="arc" marker-end="url(#ah)" d="M237.3 155.8 A90 90 0 0 1 171.8 221.3"/>
+          <path class="arc" marker-end="url(#ah)" d="M128.2 221.3 A90 90 0 0 1 62.7 155.8"/>
+          <path class="arc" marker-end="url(#ah)" d="M62.7 112.2 A90 90 0 0 1 128.2 46.7"/>
+          <circle class="pulse" cx="150" cy="134" r="90" transform="rotate(-90 150 134)"/>
+          <g fill="#1f3f66"><circle cx="150" cy="44" r="6"/><circle cx="240" cy="134" r="6"/><circle cx="150" cy="224" r="6"/><circle cx="60" cy="134" r="6"/></g>
+          <g font-size="12.5" font-weight="600" fill="#15212e" font-family="inherit">
+            <text x="150" y="28" text-anchor="middle">Enviar</text>
+            <text x="252" y="138">Medir</text>
+            <text x="150" y="250" text-anchor="middle">Aprender</text>
+            <text x="48" y="138" text-anchor="end">Ajustar</text>
+          </g>
+          <g text-anchor="middle" font-family="inherit">
+            <text x="150" y="126" font-size="11" fill="#68717c">Revisión semanal</text>
+            <text x="150" y="146" font-size="18" font-weight="600" fill="#1f3f66">30 min</text>
+          </g>
+        </svg>
+        <dl>
+          <div><dt>Enviar</dt><dd>Correos y cartas a la lista de la semana.</dd></div>
+          <div><dt>Medir</dt><dd>Quién abre, responde o escanea el QR. Todo queda en el CRM de Cabrera Heredia.</dd></div>
+          <div><dt>Aprender</dt><dd>Qué lista y qué mensaje consiguen respuestas.</dd></div>
+          <div><dt>Ajustar</dt><dd>En la revisión semanal de 30 minutos cambiamos listas y mensajes.</dd></div>
+        </dl>
+      </div>
+      <p class="msg"><b>Cada mes, más barato y mejor.</b> Cada vuelta deja datos en el CRM. Con más datos hacen falta menos envíos para llegar a una reunión: menos impresión y franqueo, y dueños mejor elegidos.</p>
+    </div>
+  </section>
+
+  <div class="decision"><div class="t">La decisión</div>
+    Aprobar <b>arranca el setup esta misma semana</b> por 450 €. El resto del gasto solo llega <b>cuando hay resultados</b>: respuestas, dueños interesados, reuniones y, al final, una compra. Así llegan al fundraising con conversaciones reales en el pipeline.
+  </div>
+
+  <div class="dhead"><h2>El detalle del acuerdo</h2><button type="button" id="toggle-all" aria-controls="detalle">Abrir todo</button></div>
+  <div id="detalle">
+
+  <details class="d" id="setup">
+    <summary><h2>El setup<span>900 € en un solo pago</span></h2><span class="g">Seis piezas listas para operar. Se paga 450 € a la firma y 450 € cuando la entrega se verifica.</span></summary>
+    <div class="body"><div>
+      <div class="items">
+        <div><b>CRM</b><span>CRM propio, sin licencia de Salesforce ni HubSpot. Registra el pipeline, el estado de cada contacto y las analíticas del embudo.</span></div>
+        <div><b>Base de datos</b><span>Empresas de SABI e Informa filtradas por la tesis y enriquecidas con <b>nombre y correo del dueño</b>. Señala las prioridades para carta física.</span></div>
+        <div><b>Cuentas de envío</b><span>Cuentas dedicadas, separadas del dominio oficial <b>cabreraheredia.com</b>. Se calientan antes de usarse y envían un máximo de 20 correos al día por cuenta.</span></div>
+        <div><b>Personalización</b><span>Flujo con IA que redacta cada correo y carta para que se lea como escrito a mano por Rafael y Diego, sin plantillas evidentes.</span></div>
+        <div><b>Cartas con QR</b><span>Cartas <b>listas para imprimir</b>, cada una con un QR propio que registra en el CRM quién la escaneó.</span></div>
+        <div><b>Trazabilidad web</b><span>Alineación con el desarrollador de la página: gancho de descarga (por ejemplo, una guía de sucesión o venta), SEO para Google y para asistentes de IA, y registro de cada alta en el CRM.</span></div>
+      </div>
+      <p style="margin-top:12px"><b>Pago:</b> 450 € a la firma y 450 € a la entrega. <b>La entrega se verifica con un lote de prueba</b> que recorre la cadena completa: correo, carta, escaneo del QR y alta en la web, todo visible en el CRM.</p>
+    </div></div>
+  </details>
+
+  <details class="d" id="peldanos">
+    <summary><h2>Qué cuenta en cada peldaño</h2><span class="g">Solo cuentan respuestas reales, dueños abiertos a vender y reuniones que ocurren. Cada una con evidencia en el CRM.</span></summary>
+    <div class="body"><div>
+      <table>
+        <thead><tr><th style="width:15%">Peldaño</th><th>Cuenta cuando</th><th>No cuenta</th><th class="r">Suma</th><th class="r">Total</th></tr></thead>
+        <tbody>
+          <tr><td><b>Respuesta</b></td><td>El dueño o un decisor contesta con una respuesta real, incluido «ahora no, el año que viene» o un referido.</td><td>Respuestas automáticas, rebotes, bajas y respuestas hostiles.</td><td class="r num">+5 €</td><td class="r num"><b>5 €</b></td></tr>
+          <tr><td><b>Calificado</b></td><td>El dueño se declara abierto a vender o acepta una llamada o reunión.</td><td>Interés de alguien sin poder de decisión.</td><td class="r num">+5 €</td><td class="r num"><b>10 €</b></td></tr>
+          <tr><td><b>Reunión</b></td><td>La reunión con Rafael o Diego ocurre.</td><td>Reuniones agendadas que no ocurren por parte del dueño.</td><td class="r num">+40 €</td><td class="r num"><b>50 €</b></td></tr>
+        </tbody>
+      </table>
+      <ul style="margin-top:10px">
+        <li><b>Una vez por empresa.</b> Cada peldaño se cobra una sola vez y se suma al anterior. Una empresa que llega a reunión suma 50 € en total: 5 € + 5 € + 40 €.</li>
+        <li><b>Dentro de la tesis.</b> Solo cuentan empresas dentro de los filtros acordados.</li>
+        <li><b>Evidencia en el CRM.</b> Cada peldaño se respalda con el hilo de correo, el escaneo del QR o la invitación de calendario.</li>
+        <li><b>Plazo de respuesta.</b> Un lead sin respuesta de Cabrera Heredia en 48 horas cuenta como entregado.</li>
+      </ul>
+    </div></div>
+  </details>
+
+  <details class="d" id="quien">
+    <summary><h2>Quién hace qué</h2><span class="g">Yo preparo y envío. Cabrera Heredia imprime las cartas, responde en 48 horas y lleva las reuniones.</span></summary>
+    <div class="body"><div>
+      <table>
+        <thead><tr><th style="width:50%">Hugo</th><th>Cabrera Heredia</th></tr></thead>
+        <tbody><tr>
+          <td>Listas, redacción, calendario y envío de correos. Curación continua: quién abrió y no respondió, qué mensaje funciona, a quién escribir después. Preparación de cada lote de cartas.</td>
+          <td>Imprimir y enviar las cartas. Responder a cada dueño en un máximo de <b>48 horas</b>. Llevar las llamadas y reuniones, porque el vendedor quiere hablar con quien compra.</td>
+        </tr></tbody>
+      </table>
+      <p style="margin-top:8px">Cada semana revisamos el embudo durante <b>30 minutos</b> y ajustamos listas y mensajes. Impresión, franqueo, dominios y herramientas corren a cargo de Cabrera Heredia, al coste.</p>
+    </div></div>
+  </details>
+
+  <details class="d" id="exito">
+    <summary><h2>Éxito y continuidad</h2><span class="g">5.000 € al cierre de una compra que entró por este pipeline, también hasta 24 meses después de terminar.</span></summary>
+    <div class="body"><div>
+      <table>
+        <thead><tr><th style="width:22%">Término</th><th>Qué significa</th><th style="width:34%">En la práctica</th></tr></thead>
+        <tbody>
+          <tr><td><b>Adquisición</b></td><td>5.000 € al cierre de la compra de una empresa que entró por este pipeline, según el registro del CRM.</td><td class="ej">Si la empresa nunca entró por el pipeline, no hay comisión.</td></tr>
+          <tr><td><b>Cola de 24 meses</b></td><td>La comisión aplica también a compras cerradas hasta 24 meses después de terminar el acuerdo.</td><td class="ej">Si el acuerdo termina en junio de 2027, una compra cerrada antes de junio de 2029 paga la comisión.</td></tr>
+          <tr><td><b>Primera oferta</b></td><td>En los 6 meses siguientes al cierre, Cabrera Heredia me pide propuesta para la transformación tecnológica antes que a otros.</td><td class="ej">No obliga a contratarla.</td></tr>
+        </tbody>
+      </table>
+    </div></div>
+  </details>
+
+  <details class="d" id="condiciones">
+    <summary><h2>Condiciones</h2><span class="g">6 meses renovables. Cualquiera sale con 30 días de aviso. Los datos son de Cabrera Heredia.</span></summary>
+    <div class="body"><div>
+      <table>
+        <thead><tr><th style="width:22%">Término</th><th>Qué significa</th><th style="width:34%">En la práctica</th></tr></thead>
+        <tbody>
+          <tr><td><b>Duración</b></td><td>6 meses desde la entrega del setup, renovable de mutuo acuerdo.</td><td class="ej">Si el setup se entrega el 1 de diciembre de 2026, el acuerdo llega al 1 de junio de 2027.</td></tr>
+          <tr><td><b>Salida</b></td><td>Cualquiera de las partes termina con 30 días de aviso. Se pagan los leads ya generados y la cola de 24 meses se mantiene.</td><td class="ej">Si avisan el 1 de marzo, el acuerdo termina el 31 de marzo y se pagan los leads hasta esa fecha.</td></tr>
+          <tr><td><b>Datos</b></td><td>Los contactos, el historial y el contenido del CRM son de Cabrera Heredia. El software y el método siguen siendo míos, con <b>licencia de uso permanente</b> para ustedes.</td><td class="ej">Al terminar, se quedan con el CRM y pueden seguir usándolo.</td></tr>
+          <tr><td><b>Facturación</b></td><td>Los leads se facturan a fin de mes según el CRM, con pago a 15 días.</td><td class="ej">Los leads de enero se facturan el 31 de enero y se pagan antes del 15 de febrero.</td></tr>
+        </tbody>
+      </table>
+    </div></div>
+  </details>
+
+  <details class="d" id="necesito">
+    <summary><h2>Qué necesito</h2><span class="g">Los filtros de la tesis, una presentación al desarrollador de la página y el visto bueno al modelo de carta.</span></summary>
+    <div class="body"><div>
+      <ul>
+        <li>Confirmar los <b>filtros de la tesis</b>: facturación, margen, recurrencia y sectores.</li>
+        <li>Presentarme al <b>desarrollador de la página</b> para alinear el gancho, el SEO y el registro de altas.</li>
+        <li>Aprobar el <b>modelo de carta</b>, la firma y el papel.</li>
+      </ul>
+    </div></div>
+  </details>
+
+  </div>
+  <div class="foot">Hugo Bojórquez, propuesta para Rafael Cabrera y Diego Heredia.</div>
+
+</div>
+
+<script>
+(function () {
+  var all = Array.prototype.slice.call(document.querySelectorAll('details.d'));
+  var toggle = document.getElementById('toggle-all');
+
+  // Abrir todo y cerrar todo.
+  function syncToggle() { toggle.textContent = all.every(function (d) { return d.open; }) ? 'Cerrar todo' : 'Abrir todo'; }
+  toggle.addEventListener('click', function () {
+    var open = !all.every(function (d) { return d.open; });
+    all.forEach(function (d) { d.open = open; });
+    syncToggle();
+  });
+  all.forEach(function (d) { d.addEventListener('toggle', syncToggle); });
+
+  // Un clic en la escalera abre el detalle correspondiente.
+  function openFromHash() {
+    var t = location.hash && document.getElementById(location.hash.slice(1));
+    if (t && t.tagName === 'DETAILS') { t.open = true; t.scrollIntoView({ block: 'start' }); }
+  }
+  window.addEventListener('hashchange', openFromHash);
+  openFromHash();
+
+  // Al imprimir o guardar en PDF, todo abierto; después se restaura lo que estaba.
+  var before = null;
+  window.addEventListener('beforeprint', function () {
+    before = all.map(function (d) { return d.open; });
+    all.forEach(function (d) { d.open = true; });
+    finishCounts();
+  });
+  window.addEventListener('afterprint', function () {
+    if (before) all.forEach(function (d, i) { d.open = before[i]; });
+    before = null; syncToggle();
+  });
+
+  // Animación: solo si el sistema no pide movimiento reducido. Los valores finales ya están en el HTML.
+  var frames = [];
+  function finishCounts() {
+    frames.forEach(cancelAnimationFrame); frames = [];
+    document.querySelectorAll('[data-count]').forEach(function (el) { el.textContent = el.dataset.count; });
+  }
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || matchMedia('print').matches) return;
+  var css = getComputedStyle(document.documentElement);
+  var dur = parseFloat(css.getPropertyValue('--dur')), stg = parseFloat(css.getPropertyValue('--stagger'));
+  document.body.classList.add('anim');
+  document.querySelectorAll('[data-count]').forEach(function (el) {
+    var host = el.closest('[style*="--i"]');
+    var i = host ? parseFloat(host.style.getPropertyValue('--i')) || 0 : 0;
+    var to = +el.dataset.count, from = +(el.dataset.from || 0);
+    var t0 = performance.now() + i * stg;
+    el.textContent = from;
+    function tick(now) {
+      var p = Math.min(1, Math.max(0, (now - t0) / dur));
+      el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) frames.push(requestAnimationFrame(tick));
+    }
+    frames.push(requestAnimationFrame(tick));
+  });
+})();
+</script>
+</body></html>
